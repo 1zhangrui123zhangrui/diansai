@@ -51,3 +51,29 @@ desktop.ini
 __pycache__/
 *.pyc
 *.pyo
+# CMake 构建产物
+build/
+Build/
+build-*/
+cmake-build-*/
+
+# VSCode 个人配置
+.vscode/
+*.code-workspace
+
+# CLion / JetBrains
+.idea/
+cmake-build-debug/
+cmake-build-release/
+
+# CMake 生成的中间文件
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+Makefile
+*.cmake.in
+compile_commands.json
+
+# STM32CubeMX 的 .mxproject 临时文件(可选,一般要提交)
+# .mxproject
