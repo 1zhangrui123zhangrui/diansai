@@ -110,7 +110,12 @@ int main(void)
    uint32_t count = 0;
   while (1)
   {
-    printf("Hello from F407! count=%lu tick=%lu\r\n", count++, HAL_GetTick());
+    /* 向 USART2 发送一条屏协议命令 */
+    char buf[64];
+    snprintf(buf, sizeof(buf), "page0.va1.txt=\"%lu\"", count++);
+    HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen(buf), 100);
+    uint8_t end[3] = {0xFF, 0xFF, 0xFF};
+    HAL_UART_Transmit(&huart2, end, 3, 100);
     HAL_Delay(1000);
     /* USER CODE END WHILE */
 
