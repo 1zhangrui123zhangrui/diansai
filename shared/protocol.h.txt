@@ -1,0 +1,95 @@
+/**
+ * @file    protocol.h
+ * @brief   简易绳驱巡检装置 - 全局通信协议定义
+ * @note    该文件被 F407 主控、F103 视觉前端共同引用,
+ *          任何修改都必须同步更新两端。
+ */
+#ifndef __PROTOCOL_H
+#define __PROTOCOL_H
+
+#include <stdint.h>
+
+/* ============================================================
+ *  一、串口屏 → F407 命令码(经 UART,115200bps)
+ *  帧格式: 0x55 0x55 + CMD + [数据] + 0xFE
+ * ============================================================ */
+#define CMD_HOME            0xA0   /* 返回首页/急停         */
+#define CMD_START           0xA1   /* 启动,回到中心区域    */
+#define CMD_AREA_PATROL     0xA2   /* 区域巡逻(四角)      */
+#define CMD_SEQ_PATROL      0xA3   /* 顺序巡逻 + 5位序列    */
+#define CMD_AUTO_PATROL     0xA4   /* 自动蛇形巡逻          */
+#define CMD_CALIBRATE       0xA5   /* 零点标定              */
+
+#define SCREEN_FRAME_HEAD   0x55   /* 帧头(连续两字节)    */
+#define SCREEN_FRAME_TAIL   0xFE   /* 变长数据帧尾          */
+
+/* ============================================================
+ *  二、F103 → F407 视觉数据包(经 nRF24L01)
+ *  固定 4 字节,发送频率约 10Hz
+ * ============================================================ */
+#define VISION_PKT_HEAD     0xAA
+
+typedef struct __attribute__((packed)) {
+    uint8_t head;         /* 固定 0xAA                     */
+    uint8_t fire_flag;    /* 0 = 无火源, 1 = 检测到火源    */
+    uint8_t seq;           /* 递增序号,防重                */
+    uint8_t checksum;     /* head ^ fire_flag ^ seq        */
+} VisionPacket_t;
+
+/* ============================================================
+ *  三、nRF24L01 公共配置(两端必须一致)
+ * ============================================================ */
+#define NRF_CHANNEL         90     /* 2.490 GHz,避开 WiFi  */
+#define NRF_PAYLOAD_SIZE    sizeof(VisionPacket_t)
+#define NRF_ADDR_WIDTH      5
+
+/* 通信地址(5字节) */
+#define NRF_ADDR_BYTE0      0xE7
+#define NRF_ADDR_BYTE1      0xE7
+#define NRF_ADDR_BYTE2      0xE7
+#define NRF_ADDR_BYTE3      0xE7
+#define NRF_ADDR_BYTE4      0xE7
+
+/* ============================================================
+ *  四、MaixCAM → F103 串口协议(ASCII)
+ *  "F1\n" = 有火源
+ *  "F0\n" = 无火源
+ * ============================================================ */
+#define CAM_UART_BAUD       115200
+
+/* ============================================================
+ *  五、几何参数(单位 cm,依据实测标定后修改)
+ * ============================================================ */
+#define ANCHOR_POS_X1   (-40.0f)   /* 四个万向轮出线点水平坐标 */
+#define ANCHOR_POS_Y1   (-40.0f)
+#define ANCHOR_POS_X2   ( 40.0f)
+#define ANCHOR_POS_Y2   (-40.0f)
+#define ANCHOR_POS_X3   ( 40.0f)
+#define ANCHOR_POS_Y3   ( 40.0f)
+#define ANCHOR_POS_X4   (-40.0f)
+#define ANCHOR_POS_Y4   ( 40.0f)
+#define ANCHOR_POS_Z    ( 30.0f)   /* 四个出线点离底面高度 */
+#define PLATFORM_H      ( 10.0f)   /* 模块离底面的悬挂高度,实测后改 */
+
+/* 五个橙色圆的坐标(中心圆坐标系) */
+#define ORANGE_CENTER_X   (  0.0f)
+#define ORANGE_CENTER_Y   (  0.0f)
+#define ORANGE_LB_X       (-20.0f)   /* 左下 */
+#define ORANGE_LB_Y       (-20.0f)
+#define ORANGE_RB_X       ( 20.0f)   /* 右下 */
+#define ORANGE_RB_Y       (-20.0f)
+#define ORANGE_RT_X       ( 20.0f)   /* 右上 */
+#define ORANGE_RT_Y       ( 20.0f)
+#define ORANGE_LT_X       (-20.0f)   /* 左上 */
+#define ORANGE_LT_Y       ( 20.0f)
+
+/* 运动参数 */
+#define MAX_SPEED_CM_S    10.0f    /* 最大线速度 */
+#define POSITION_TOL_CM    0.5f    /* 到位判定容差 */
+#define SAFETY_BOUND      28.0f    /* 坐标安全边界,超过拒绝执行 */
+
+/* 火源管理 */
+#define MAX_FIRE_COUNT        2    /* 最多记录几个火源 */
+#define FIRE_DEDUP_DIST_CM   5.0f  /* 去重:离已记录火源<5cm视为同一个 */
+
+#endif /* __PROTOCOL_H */
