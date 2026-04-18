@@ -74,6 +74,13 @@ HAL_StatusTypeDef MotionSync_RefreshFeedback(void)
     return HAL_OK;
 }
 
+HAL_StatusTypeDef MotionSync_AbortAndRefresh(void)
+{
+    MotorHw_StopAll();
+    s_motion_busy = 0U;
+    return MotionSync_RefreshFeedback();
+}
+
 HAL_StatusTypeDef MotionSync_MoveTo(const Point2D *target)
 {
     int32_t pulses[4];
