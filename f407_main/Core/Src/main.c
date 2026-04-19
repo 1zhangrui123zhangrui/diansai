@@ -26,7 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
-#include <string.h>
+#include "screen.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,21 +47,67 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+static uint8_t g_fire1_recorded = 0u;
+static uint8_t g_fire2_recorded = 0u;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+static void on_start(void);
+static void on_area(void);
+static void on_auto(void);
+static void on_home(void);
+static void on_calibrate(void);
+static void on_seq(uint8_t *seq);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 int _write(int fd, char *ptr, int len)
 {
-    HAL_UART_Transmit(&huart1, (uint8_t *)ptr, len, 100);
+    (void)fd;
+    HAL_UART_Transmit(&huart1, (uint8_t *)ptr, len, 100u);
     return len;
+}
+
+static void on_start(void)
+{
+    printf("CMD: START\r\n");
+}
+
+static void on_area(void)
+{
+    printf("CMD: AREA\r\n");
+}
+
+static void on_auto(void)
+{
+    printf("CMD: AUTO\r\n");
+}
+
+static void on_home(void)
+{
+    printf("CMD: HOME\r\n");
+}
+
+static void on_calibrate(void)
+{
+    printf("CMD: CALIBRATE\r\n");
+}
+
+static void on_seq(uint8_t *seq)
+{
+    if (seq == NULL) {
+        return;
+    }
+
+    printf("CMD: SEQ %u%u%u%u%u\r\n",
+           (unsigned)seq[0],
+           (unsigned)seq[1],
+           (unsigned)seq[2],
+           (unsigned)seq[3],
+           (unsigned)seq[4]);
 }
 /* USER CODE END 0 */
 
@@ -71,9 +117,11 @@ int _write(int fd, char *ptr, int len)
   */
 int main(void)
 {
-
   /* USER CODE BEGIN 1 */
-
+  float x = 0.0f;
+  float y = 0.0f;
+  uint32_t last_report = 0u;
+  uint32_t now = 0u;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -102,21 +150,52 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+  printf("\r\n==== F407 screen protocol demo ====\r\n");
+  printf("USART1: debug log @115200\r\n");
+  printf("USART2: TJC screen @115200 (PD5 TX, PD6 RX)\r\n");
 
+  Screen_Init(&huart2);
+  Screen_RegisterCallback(CMD_START, on_start);
+  Screen_RegisterCallback(CMD_AREA_PATROL, on_area);
+  Screen_RegisterCallback(CMD_AUTO_PATROL, on_auto);
+  Screen_RegisterCallback(CMD_HOME, on_home);
+  Screen_RegisterCallback(CMD_CALIBRATE, on_calibrate);
+  Screen_RegisterSequenceCallback(on_seq);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-   uint32_t count = 0;
   while (1)
   {
-    /* 向 USART2 发送一条屏协议命令 */
-    char buf[64];
-    snprintf(buf, sizeof(buf), "page0.va1.txt=\"%lu\"", count++);
-    HAL_UART_Transmit(&huart2, (uint8_t *)buf, strlen(buf), 100);
-    uint8_t end[3] = {0xFF, 0xFF, 0xFF};
-    HAL_UART_Transmit(&huart2, end, 3, 100);
-    HAL_Delay(1000);
+    now = HAL_GetTick();
+
+    if ((now - last_report) >= 100u) {
+      last_report = now;
+
+      x += 0.10f;
+      y += 0.05f;
+
+      if (x > 30.0f) {
+        x = -30.0f;
+      }
+      if (y > 30.0f) {
+        y = -30.0f;
+      }
+
+      Screen_SetCoord(x, y);
+    }
+
+    if ((now >= 3000u) && (g_fire1_recorded == 0u)) {
+      g_fire1_recorded = 1u;
+      Screen_RecordFire(12.30f, -8.60f);
+      printf("Fire #1 recorded at (12.30, -8.60)\r\n");
+    }
+
+    if ((now >= 6000u) && (g_fire2_recorded == 0u)) {
+      g_fire2_recorded = 1u;
+      Screen_RecordFire(-18.40f, 16.20f);
+      printf("Fire #2 recorded at (-18.40, 16.20)\r\n");
+    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -157,8 +236,8 @@ void SystemClock_Config(void)
 
   /** Initializes the CPU, AHB and APB buses clocks
   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
+                              | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
@@ -181,7 +260,6 @@ void SystemClock_Config(void)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
   while (1)
   {
@@ -200,8 +278,8 @@ void Error_Handler(void)
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  (void)file;
+  (void)line;
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

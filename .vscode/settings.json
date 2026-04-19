@@ -1,3 +1,6 @@
 {
-    "cmake.sourceDirectory": "E:/diansai/diansai/f407_main"
+    "cmake.sourceDirectory": "E:/diansai/diansai/f407_main/cmake/stm32cubemx",
+    "cmake.useCMakePresets": "always",
+    "cmake.configurePreset": "Debug",
+    "cmake.buildPreset": "Debug"
 }
