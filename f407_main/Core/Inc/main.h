@@ -57,18 +57,6 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define M3_DIR_Pin GPIO_PIN_2
-#define M3_DIR_GPIO_Port GPIOE
-#define M4_DIR_Pin GPIO_PIN_3
-#define M4_DIR_GPIO_Port GPIOE
-#define M1_ENA_Pin GPIO_PIN_4
-#define M1_ENA_GPIO_Port GPIOE
-#define M2_ENA_Pin GPIO_PIN_5
-#define M2_ENA_GPIO_Port GPIOE
-#define M3_ENA_Pin GPIO_PIN_6
-#define M3_ENA_GPIO_Port GPIOE
-#define M4_ENA_Pin GPIO_PIN_13
-#define M4_ENA_GPIO_Port GPIOC
 #define NRF_CE_Pin GPIO_PIN_0
 #define NRF_CE_GPIO_Port GPIOB
 #define NRF_CSN_Pin GPIO_PIN_1
@@ -78,10 +66,6 @@ void Error_Handler(void);
 #define NRF_IRQ_EXTI_IRQn EXTI2_IRQn
 #define BUZZER_Pin GPIO_PIN_7
 #define BUZZER_GPIO_Port GPIOE
-#define M1_DIR_Pin GPIO_PIN_0
-#define M1_DIR_GPIO_Port GPIOE
-#define M2_DIR_Pin GPIO_PIN_1
-#define M2_DIR_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */
 

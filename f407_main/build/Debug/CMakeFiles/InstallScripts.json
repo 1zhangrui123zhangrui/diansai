@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"E:/diansai/diansai/f407_main/build/Debug/cmake_install.cmake",
+		"E:/diansai/diansai/f407_main/build/Debug/cmake/stm32cubemx/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"E:/diansai/diansai/build/cmake_install.cmake",
+		"E:/diansai/diansai/build/cmake/stm32cubemx/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
